@@ -2,6 +2,7 @@ package com.example.myshoes
 
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.text.TextUtils
 import android.widget.Toast
@@ -26,6 +27,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myshoes.ui.theme.MyShoesTheme
+import com.example.myshoes.vendor.VendorDashboard
 import com.google.android.gms.tasks.Task
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseAuth
@@ -213,6 +215,7 @@ private fun signInWithPhoneAuthCredentials(
                message.value = "Verification Successful"
                Toast.makeText(context, "Verification Successful", Toast.LENGTH_LONG).show()
                // go to relevant activity
+               goToVendorDashboard(context)
 
            } else {
                if(it.exception is FirebaseAuthInvalidCredentialsException){
@@ -223,6 +226,15 @@ private fun signInWithPhoneAuthCredentials(
     }
 
 }
+
+fun goToVendorDashboard(context: Activity) {
+    val intent = Intent(context, VendorDashboard::class.java)
+    context.startActivity(intent)
+}
+
+
+
+
 
 
 
