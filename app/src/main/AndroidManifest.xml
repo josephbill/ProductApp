@@ -16,6 +16,11 @@
         android:theme="@style/Theme.MyShoes"
         tools:targetApi="31">
         <activity
+            android:name=".vendor.ViewInventory"
+            android:exported="false"
+            android:label="@string/title_activity_view_inventory"
+            android:theme="@style/Theme.MyShoes" />
+        <activity
             android:name=".vendor.VendorDashboard"
             android:exported="false"
             android:label="@string/title_activity_vendor_dashboard"
@@ -35,7 +40,7 @@
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.MyShoes"/>
+            android:theme="@style/Theme.MyShoes" />
     </application>
 
 </manifest>

@@ -25,6 +25,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.myshoes.ui.theme.MyShoesTheme
+import com.example.myshoes.vendor.VendorDashboard
 import kotlinx.coroutines.delay
 
 class SplashScreen : ComponentActivity() {
@@ -84,7 +85,9 @@ class SplashScreen : ComponentActivity() {
     }
 
     private fun startTheVendorActivity() {
-        val intent = Intent(this,MainActivity::class.java)
+//        val intent = Intent(this,MainActivity::class.java)
+//        startActivity(intent)
+        val intent = Intent(this,VendorDashboard::class.java)
         startActivity(intent)
     }
 }

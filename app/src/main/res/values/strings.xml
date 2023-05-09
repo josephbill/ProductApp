@@ -1,5 +1,6 @@
 <resources>
-    <string name="app_name">MyShoes</string>
-    <string name="title_activity_splash_screen">SplashScreen</string>
+    <string name="app_name">Products World</string>
+    <string name="title_activity_splash_screen">Product World</string>
     <string name="title_activity_vendor_dashboard">VendorDashboard</string>
+    <string name="title_activity_view_inventory">ViewInventory</string>
 </resources>

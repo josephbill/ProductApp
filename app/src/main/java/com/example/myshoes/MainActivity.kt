@@ -12,10 +12,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -110,6 +107,7 @@ fun authenticationUi(context : Context){
           Spacer(modifier = Modifier.height(10.dp))
           // button to generate otp / make the OTP call
           Button(onClick = {
+
               // check if the phonenumber variable is empty
               if (TextUtils.isEmpty(phoneNumber.value.toString())){
                   Toast.makeText(context, "Phone Number cannot be empty", Toast.LENGTH_LONG).show()
@@ -191,6 +189,7 @@ private fun sendVerificationCode(
     callback: PhoneAuthProvider.OnVerificationStateChangedCallbacks
 ) {
     // generating the actual code
+    
     val options = PhoneAuthOptions.newBuilder(mAuth)
         .setPhoneNumber(number)
         .setTimeout(60L, TimeUnit.SECONDS)
@@ -231,6 +230,7 @@ fun goToVendorDashboard(context: Activity) {
     val intent = Intent(context, VendorDashboard::class.java)
     context.startActivity(intent)
 }
+
 
 
 

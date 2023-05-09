@@ -1,11 +1,16 @@
 package com.example.myshoes.vendor
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.ManagedActivityResultLauncher
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
@@ -20,12 +25,11 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.myshoes.authenticationUi
+import com.example.myshoes.MainActivity
 import com.example.myshoes.vendor.models.ProductsObj
-import com.example.myshoes.vendor.ui.theme.MyShoesTheme
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 
 class VendorDashboard : ComponentActivity() {
@@ -109,14 +113,21 @@ fun productForm(context: Context, databaseReference: DatabaseReference){
         Spacer(modifier = Modifier.height(10.dp))
         
         Button(onClick = {
-//            push our data to the realtime database 
-            val productObj = ProductsObj(productname.value.text,productcontact.value.text,productimage.value.text,
-            productprice.value.text)
+//            push our data to the realtime database
+            // use the push method to generate a unique key for the record
+            val newProduct_Reference = databaseReference.push()
+            // key / unique identifier
+            val productId = newProduct_Reference.key
+            val productObj = productId?.let {
+                ProductsObj(
+                    it,productname.value.text,productcontact.value.text,productimage.value.text,
+                    productprice.value.text)
+            }
 
             // we use a class in firebase called the addValueEventListener
             databaseReference.addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    databaseReference.setValue(productObj)
+                    newProduct_Reference.setValue(productObj)
                     Toast.makeText(context,"Product has been added successfully!!,", Toast.LENGTH_LONG).show()
                     Log.d("Product Push",snapshot.toString())
                 }
@@ -137,15 +148,40 @@ fun productForm(context: Context, databaseReference: DatabaseReference){
         }
         
         Spacer(modifier = Modifier.height(10.dp))
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween){
-            Button(colors = ButtonDefaults.buttonColors(backgroundColor = Color.Yellow),onClick = { /*TODO*/ }) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceAround){
+
+            val activitylauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.StartActivityForResult()){ activityResult ->
+
+            }
+            Button(colors = ButtonDefaults.buttonColors(backgroundColor = Color.Yellow),
+                onClick = {
+                    val intent = Intent(context,ViewInventory::class.java)
+                    activitylauncher.launch(intent)
+                }) {
+
                 Text(text = "View Inventory", modifier = Modifier.padding(5.dp))
             }
-            Button(colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red),onClick = { /*TODO*/ }) {
+
+            //logout
+
+            Button(colors = ButtonDefaults.buttonColors(backgroundColor = Color.Red),
+                onClick = {
+                     FirebaseAuth.getInstance().signOut()
+                     changeUi(context,activitylauncher)
+                }) {
                 Text(text = "Logout", modifier = Modifier.padding(5.dp))
             }
         }
     }
+}
+
+fun changeUi(
+    context: Context,
+    activitylauncher: ManagedActivityResultLauncher<Intent, ActivityResult>
+) {
+    val intent = Intent(context,MainActivity::class.java)
+    activitylauncher.launch(intent)
 }
 
 
