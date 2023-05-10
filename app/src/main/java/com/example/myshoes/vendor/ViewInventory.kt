@@ -2,6 +2,8 @@ package com.example.myshoes.vendor
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -14,13 +16,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.*
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -29,8 +31,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.myshoes.R
+import androidx.room.Room
+import coil.compose.rememberImagePainter
 import com.example.myshoes.vendor.models.ProductsObj
+import com.example.myshoes.vendor.roomdb.AppDatabase
+import com.example.myshoes.vendor.roomdb.ProductEntity
+import com.example.myshoes.vendor.roomdb.ProductViewModel
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -40,6 +46,7 @@ class ViewInventory : ComponentActivity() {
     @SuppressLint("UnrememberedMutableState")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
             com.example.myshoes.ui.theme.MyShoesTheme() {
                 Surface(
@@ -58,6 +65,9 @@ class ViewInventory : ComponentActivity() {
                             })
                     }) {
                         Column(modifier = Modifier.padding(it)) {
+
+
+
                             // mutableStateListOf<String?>()
                             var productList = mutableStateListOf<ProductsObj?>()
                             // getting firebase instance and the database reference
@@ -145,32 +155,58 @@ fun listOfProducts(context: Context, productList: SnapshotStateList<ProductsObj?
 
 
 @Composable
-fun ProductCard(product: ProductsObj){
-    Card(modifier = Modifier
-        .padding(8.dp)
-        .fillMaxWidth(), elevation = 4.dp) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            // replace with a dynamic image
-            Image(
-                painter =  painterResource(id = R.drawable.splashlogo),
-                contentDescription = "Product Image", modifier = Modifier.height(200.dp).fillMaxWidth().clip(shape = RoundedCornerShape(8.dp)),
-                contentScale = ContentScale.Crop
-                )
+fun ProductCard(product: ProductsObj) {
+    Card(
+        modifier = Modifier
+            .padding(8.dp)
+            .fillMaxWidth(),
+        elevation = 4.dp
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
 
-            Text(text = product.productName,
-                 style = MaterialTheme.typography.h5,
+            // load our image composable
+            Image(
+                painter = rememberImagePainter(data = product.productImage),
+                contentDescription = "Product Image",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .clip(RoundedCornerShape(8.dp))
+            )
+            Text(
+                text = product.productName,
+                style = MaterialTheme.typography.h5,
                 fontWeight = FontWeight.Bold
-                )
+            )
             Text(text = "Seller Contact: ${product.contactPhone}")
             Text(text = "Seller Price: ${product.productPrice}")
+            Spacer(modifier = Modifier.height(5.dp))
+            // row
+            Row() {
+                Button(onClick = {
+                    //on click we save our product to the room database /offline database.
+                    // create a new entity object
+                    val productOffline = ProductEntity(
+                        product_Id = product.productId,
+                        product_Name = product.productName,
+                        contact_Phone = product.contactPhone,
+                        product_Image = product.productImage,
+                        product_Price = product.productPrice
+                    )
+
+
+                }) {
+                    Text(text = "Add to Favourites")
+                }
+            }
         }
+
+
     }
 }
-
-
-
-
-
 
 
 
