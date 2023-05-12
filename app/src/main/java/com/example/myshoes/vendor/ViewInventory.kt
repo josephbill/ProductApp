@@ -2,8 +2,6 @@ package com.example.myshoes.vendor
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -22,27 +20,32 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.room.Room
+import androidx.lifecycle.LifecycleCoroutineScope
+import androidx.lifecycle.lifecycleScope
 import coil.compose.rememberImagePainter
+import com.example.myshoes.vendor.favourites.Favourites
+import com.example.myshoes.vendor.favourites.FavouritesDAO
+import com.example.myshoes.vendor.favourites.FavouritesDatabase
 import com.example.myshoes.vendor.models.ProductsObj
-import com.example.myshoes.vendor.roomdb.AppDatabase
-import com.example.myshoes.vendor.roomdb.ProductEntity
-import com.example.myshoes.vendor.roomdb.ProductViewModel
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
+import java.util.*
 
 class ViewInventory : ComponentActivity() {
+    // lazy is used to avoid unnecessary intialization of props
+    // can improve performance and reduce memory usage
+    private val favouritesDatabase by lazy { FavouritesDatabase.getDatabase(this).favouritesDao() }
     @SuppressLint("UnrememberedMutableState")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,9 +68,6 @@ class ViewInventory : ComponentActivity() {
                             })
                     }) {
                         Column(modifier = Modifier.padding(it)) {
-
-
-
                             // mutableStateListOf<String?>()
                             var productList = mutableStateListOf<ProductsObj?>()
                             // getting firebase instance and the database reference
@@ -114,7 +114,7 @@ class ViewInventory : ComponentActivity() {
 
                             })
                                 // call to composable to display our user interface
-                            listOfProducts(LocalContext.current,productList)
+                            listOfProducts(LocalContext.current,productList,lifecycleScope,favouritesDatabase)
                         }
                     }
                 }
@@ -124,7 +124,12 @@ class ViewInventory : ComponentActivity() {
 }
 
 @Composable
-fun listOfProducts(context: Context, productList: SnapshotStateList<ProductsObj?>){
+fun listOfProducts(
+    context: Context,
+    productList: SnapshotStateList<ProductsObj?>,
+    lifecycleScope: LifecycleCoroutineScope,
+    favouritesDatabase: FavouritesDAO,
+){
         Column(modifier = Modifier
             .fillMaxHeight()
             .fillMaxWidth()
@@ -145,7 +150,7 @@ fun listOfProducts(context: Context, productList: SnapshotStateList<ProductsObj?
 //                 make my composable
                      // !! this is called the safe call operator
                      // its use here is to unwrap the opting String? value from product list.
-                     ProductCard(product = product!! )
+                     ProductCard(product = product!!, context,lifecycleScope,favouritesDatabase)
                  }
              }
         }
@@ -155,7 +160,12 @@ fun listOfProducts(context: Context, productList: SnapshotStateList<ProductsObj?
 
 
 @Composable
-fun ProductCard(product: ProductsObj) {
+fun ProductCard(
+    product: ProductsObj,
+    context: Context,
+    lifecycleScope: LifecycleCoroutineScope,
+    favouritesDatabase: FavouritesDAO
+) {
     Card(
         modifier = Modifier
             .padding(8.dp)
@@ -187,29 +197,38 @@ fun ProductCard(product: ProductsObj) {
             // row
             Row() {
                 Button(onClick = {
-                    //on click we save our product to the room database /offline database.
-                    // create a new entity object
-                    val productOffline = ProductEntity(
-                        product_Id = product.productId,
-                        product_Name = product.productName,
-                        contact_Phone = product.contactPhone,
-                        product_Image = product.productImage,
-                        product_Price = product.productPrice
-                    )
-
-
+                    // get the current time and date
+                    val newFavAdded  = Date()
+                    // add product to favourite
+                    val newFav = Favourites(product.productId,product.productName,product.contactPhone,product.productImage
+                    ,product.productPrice,newFavAdded)
+                    // adding the product to the room db
+                    lifecycleScope.launch{
+                        favouritesDatabase.addFav(newFav)
+                    }
                 }) {
                     Text(text = "Add to Favourites")
                 }
+
+                // btn to view favs or data added.
+
+                Button(modifier = Modifier.padding(5.dp),onClick = {
+                       // we need to get our list
+                       var favouriteList : Flow<List<Favourites>>? = null
+                       lifecycleScope.launch{
+                           favouriteList = favouritesDatabase.getFavs()
+                           favouriteList!!.collect{
+                               Log.d("favs", it.toString())
+                           }
+                       }
+                }) {
+                    Text(text = "View Favs")
+                }
+
             }
         }
-
-
     }
 }
-
-
-
 
 
 
