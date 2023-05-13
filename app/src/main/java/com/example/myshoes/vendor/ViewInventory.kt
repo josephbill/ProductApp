@@ -113,7 +113,7 @@ class ViewInventory : ComponentActivity() {
                                 }
 
                             })
-                                // call to composable to display our user interface
+                            // call to composable to display our user interface
                             listOfProducts(LocalContext.current,productList,lifecycleScope,favouritesDatabase)
                         }
                     }
@@ -130,30 +130,30 @@ fun listOfProducts(
     lifecycleScope: LifecycleCoroutineScope,
     favouritesDatabase: FavouritesDAO,
 ){
-        Column(modifier = Modifier
-            .fillMaxHeight()
-            .fillMaxWidth()
-            .background(Color.White),
-            verticalArrangement = Arrangement.Top, horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-              Text(
-                  text = "Products World",
-                  modifier = Modifier.padding(10.dp),
-                  style = TextStyle(
-                      color = Color.Black, fontSize = 16.sp
-                  ), fontWeight = FontWeight.Bold
-              )
-            
-             LazyColumn{
-                 items(productList) {product ->
-                     // here have a custom UI for the list or quick set up 
+    Column(modifier = Modifier
+        .fillMaxHeight()
+        .fillMaxWidth()
+        .background(Color.White),
+        verticalArrangement = Arrangement.Top, horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Products World",
+            modifier = Modifier.padding(10.dp),
+            style = TextStyle(
+                color = Color.Black, fontSize = 16.sp
+            ), fontWeight = FontWeight.Bold
+        )
+
+        LazyColumn{
+            items(productList) {product ->
+                // here have a custom UI for the list or quick set up
 //                 make my composable
-                     // !! this is called the safe call operator
-                     // its use here is to unwrap the opting String? value from product list.
-                     ProductCard(product = product!!, context,lifecycleScope,favouritesDatabase)
-                 }
-             }
+                // !! this is called the safe call operator
+                // its use here is to unwrap the opting String? value from product list.
+                ProductCard(product = product!!, context,lifecycleScope,favouritesDatabase)
+            }
         }
+    }
 }
 
 
@@ -201,7 +201,7 @@ fun ProductCard(
                     val newFavAdded  = Date()
                     // add product to favourite
                     val newFav = Favourites(product.productId,product.productName,product.contactPhone,product.productImage
-                    ,product.productPrice,newFavAdded)
+                        ,product.productPrice,newFavAdded)
                     // adding the product to the room db
                     lifecycleScope.launch{
                         favouritesDatabase.addFav(newFav)
@@ -213,14 +213,14 @@ fun ProductCard(
                 // btn to view favs or data added.
 
                 Button(modifier = Modifier.padding(5.dp),onClick = {
-                       // we need to get our list
-                       var favouriteList : Flow<List<Favourites>>? = null
-                       lifecycleScope.launch{
-                           favouriteList = favouritesDatabase.getFavs()
-                           favouriteList!!.collect{
-                               Log.d("favs", it.toString())
-                           }
-                       }
+                    // we need to get our list
+                    var favouriteList : Flow<List<Favourites>>? = null
+                    lifecycleScope.launch{
+                        favouriteList = favouritesDatabase.getFavs()
+                        favouriteList!!.collect{
+                            Log.d("favs", it.toString())
+                        }
+                    }
                 }) {
                     Text(text = "View Favs")
                 }
@@ -229,21 +229,3 @@ fun ProductCard(
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
