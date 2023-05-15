@@ -37,8 +37,10 @@ import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.*
 
@@ -136,13 +138,22 @@ fun listOfProducts(
         .background(Color.White),
         verticalArrangement = Arrangement.Top, horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = "Products World",
-            modifier = Modifier.padding(10.dp),
-            style = TextStyle(
-                color = Color.Black, fontSize = 16.sp
-            ), fontWeight = FontWeight.Bold
-        )
+
+        Row() {
+            Text(
+                text = "Products World",
+                modifier = Modifier.padding(10.dp),
+                style = TextStyle(
+                    color = Color.Black, fontSize = 16.sp
+                ), fontWeight = FontWeight.Bold
+            )
+
+            // show favourites composable
+            ShowFavs(
+                 favouritesDatabase = favouritesDatabase,
+                 lifecycleScope = lifecycleScope
+            )
+        }
 
         LazyColumn{
             items(productList) {product ->
@@ -156,7 +167,62 @@ fun listOfProducts(
     }
 }
 
+@Composable
+fun ShowFavs(favouritesDatabase: FavouritesDAO, lifecycleScope: LifecycleCoroutineScope) {
+   // state variable to track whether my pop up interface is open or closed
+    var showFavDialog by remember { mutableStateOf(false) }
+    // we need our list of favourites.
+    var favouriteList by remember {
+        mutableStateOf(emptyList<Favourites>())
+    }
+    // call the button
+    Button(onClick = {
+        // fetching data from the room database and setting the state of our alert box
+        showFavDialog = true
+        // get our list
+        lifecycleScope.launch{
+            favouriteList = favouritesDatabase.getFavs().first()
+        }
 
+    }) {
+        Text(text = "View Favourites")
+    }
+    var dialogHeight  = 600.dp
+    if (showFavDialog){
+        AlertDialog(
+            onDismissRequest = {  showFavDialog = false},
+            title = { Text(text = "My Favourites")},
+            text = {
+                   Box(modifier = Modifier
+                       .height(dialogHeight)
+                       .fillMaxWidth() ){
+                       LazyColumn(modifier = Modifier
+                           .padding(8.dp)
+                           .fillMaxWidth()){
+                           items(favouriteList) {
+                               Card(modifier = Modifier.padding(8.dp), elevation = 4.dp) {
+                                   Column(modifier = Modifier.padding(16.dp)) {
+                                       Text(text = it.favouriteName, fontWeight = FontWeight.Bold)
+                                       Text("Image download link : ${it.favouriteImage}")
+                                       Text("Product Seller : ${it.favouriteContact}")
+                                       Text("Product Price : ${it.favouritePrice}")
+                                   }
+                               }
+                           }
+                       }
+                   }
+
+
+            } ,
+            confirmButton = {
+                Button(onClick = { showFavDialog = false}) {
+                    Text(text = "Close Dialog")
+                }
+            }
+            )
+    }
+
+}
 
 
 @Composable
@@ -194,9 +260,14 @@ fun ProductCard(
             Text(text = "Seller Contact: ${product.contactPhone}")
             Text(text = "Seller Price: ${product.productPrice}")
             Spacer(modifier = Modifier.height(5.dp))
+            // define state to track loading process
+            var isLoading by remember {
+                mutableStateOf(false)
+            }
             // row
             Row() {
                 Button(onClick = {
+                    isLoading = true
                     // get the current time and date
                     val newFavAdded  = Date()
                     // add product to favourite
@@ -205,27 +276,52 @@ fun ProductCard(
                     // adding the product to the room db
                     lifecycleScope.launch{
                         favouritesDatabase.addFav(newFav)
+                        delay(3000)
+                        isLoading = false
                     }
                 }) {
-                    Text(text = "Add to Favourites")
-                }
-
-                // btn to view favs or data added.
-
-                Button(modifier = Modifier.padding(5.dp),onClick = {
-                    // we need to get our list
-                    var favouriteList : Flow<List<Favourites>>? = null
-                    lifecycleScope.launch{
-                        favouriteList = favouritesDatabase.getFavs()
-                        favouriteList!!.collect{
-                            Log.d("favs", it.toString())
-                        }
+                    if (isLoading){
+                        LoadingProgress()
+//                        CircularProgressIndicator()
+                    } else {
+                        Text(text = "Add to Favourites")
                     }
-                }) {
-                    Text(text = "View Favs")
                 }
 
             }
         }
     }
 }
+
+@Composable
+fun LoadingProgress() {
+    val strokeWidth = 5.dp
+    Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        CircularProgressIndicator(
+            modifier = Modifier.size(32.dp),
+           color = Color.Yellow,
+            strokeWidth = strokeWidth
+        )
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
